@@ -1,9 +1,12 @@
 import {useState, useEffect} from 'react';
+import { useParams } from 'react-router';
 
 import Image from '../../../components/Image/Image';
 import './SinglePost.css';
 
+
 const SinglePost = (props) => {
+  const params = useParams();
   const [state, setState] = useState({
     title: '',
     author: '',
@@ -13,8 +16,9 @@ const SinglePost = (props) => {
   });
 
 useEffect(() => {
-    const postId = props.match.params.postId;
-    fetch('URL')
+    const postId = params.postId;
+    
+    fetch('http://localhost:8080/feed/post/' + postId)
       .then(res => {
         if (res.status !== 200) {
           throw new Error('Failed to fetch status');
@@ -26,6 +30,7 @@ useEffect(() => {
           title: resData.post.title,
           author: resData.post.creator.name,
           date: new Date(resData.post.createdAt).toLocaleDateString('en-US'),
+          image: "http://localhost:8080/" + resData.post.imageUrl,
           content: resData.post.content
         });
       })

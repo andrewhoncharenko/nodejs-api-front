@@ -197,19 +197,19 @@ function App(props) {
           element: <RootLayout showBackdrop = {state.showBackdrop} isAuth = {state.isAuth} backdropClickHandler = {backdropClickHandler} />,
           errorElement: <ErrorHandler error={state.error} onHandle={errorHandler} />,
           children: [
-          {
-            path: "/",
-            element: <FeedPage userId={state.userId} token={state.token} />
-          },
-          {
-            path: "/:postId",
-            element: <SinglePostPage
-                {...props}
-                userId={state.userId}
-                token={state.token}
-              />
-          }
-      ]
+            {
+              path: "/",
+              element: <FeedPage userId={state.userId} token={state.token} />
+            },
+            {
+              path: "/:postId",
+              element: <SinglePostPage
+                  {...props}
+                  userId={state.userId}
+                  token={state.token}
+                />
+            }
+          ]
     }]);
   }
   return <RouterProvider router={router} />

@@ -96,7 +96,7 @@ const statusUpdateHandler = event => {
 
 const newPostHandler = () => {
     setState(prevState => {
-      return { ...prevState, isEditing: true }
+      return { ...prevState, isEditing: true };
     });
   };
 
@@ -119,22 +119,24 @@ const cancelEditHandler = () => {
   };
 
 const finishEditHandler = postData => {
+    let url = 'http://localhost:8080/feed/post';
+    let method = "POST";
+    const formData = new FormData();
+    
     setState(prevState => {
       return { ...prevState, editLoading: true };
     });
-    // Set up data (with image!)
-    let url = 'http://localhost:8080/feed/post';
-    let method = "POST";
+
+    formData.append("title", postData.title);
+    formData.append("image", postData.image);
+    formData.append("content", postData.content);
     if (state.editPost) {
       url = 'URL';
     }
 
     fetch(url, {
       method: method,
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({title: postData.title, content: postData.content})
+      body: formData
     })
       .then(res => {
         if (res.status !== 200 && res.status !== 201) {

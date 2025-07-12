@@ -22,7 +22,7 @@ const button = props =>
         `button--${props.design}`,
         `button--${props.mode}`
       ].join(' ')}
-      to={"/feed/" + props.link}
+      to={props.link}
     >
       {props.children}
     </Link>
