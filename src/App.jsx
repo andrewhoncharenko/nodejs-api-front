@@ -2,10 +2,6 @@ import { useEffect, useState } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import RootLayout from './components/Layout/RootLayout';
-import Backdrop from './components/Backdrop/Backdrop';
-import Toolbar from './components/Toolbar/Toolbar';
-import MainNavigation from './components/Navigation/MainNavigation/MainNavigation';
-import MobileNavigation from './components/Navigation/MobileNavigation/MobileNavigation';
 import ErrorHandler from './components/ErrorHandler/ErrorHandler';
 import FeedPage from './pages/Feed/Feed';
 import SinglePostPage from './pages/Feed/SinglePost/SinglePost';
@@ -18,7 +14,7 @@ function App(props) {
   const [state, setState] = useState({
     showBackdrop: false,
     showMobileNav: false,
-    isAuth: true,
+    isAuth: false,
     token: null,
     userId: null,
     authLoading: false,
@@ -66,7 +62,16 @@ function App(props) {
   const loginHandler = (event, authData) => {
     event.preventDefault();
     setState({ ...state, authLoading: true });
-    fetch('URL')
+    fetch('http://localhost:8080/auth/login', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: authData.email,
+        password: authData.password
+      })
+    })
       .then(res => {
         if (res.status === 422) {
           throw new Error('Validation failed.');
@@ -78,7 +83,6 @@ function App(props) {
         return res.json();
       })
       .then(resData => {
-        console.log(resData);
         setState(prevState => {
           return {
             ...prevState,
@@ -115,7 +119,17 @@ function App(props) {
     setState(prevState => {
       return{ ...prevState, authLoading: true };
     });
-    fetch('URL')
+    fetch('http://localhost:8080/auth/signup', {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: authData.signupForm.email.value,
+        password: authData.signupForm.password.value,
+        name: authData.signupForm.name.value
+      })
+    })
       .then(res => {
         if (res.status === 422) {
           throw new Error(
@@ -129,7 +143,6 @@ function App(props) {
         return res.json();
       })
       .then(resData => {
-        console.log(resData);
         setState(prevState => {
           return{ ...prevState, isAuth: false, authLoading: false }
         });
@@ -194,7 +207,12 @@ function App(props) {
       router = createBrowserRouter([
         {
           path: "/",
-          element: <RootLayout showBackdrop = {state.showBackdrop} isAuth = {state.isAuth} backdropClickHandler = {backdropClickHandler} />,
+          element: <RootLayout
+            showBackdrop = {state.showBackdrop}
+            isAuth = {state.isAuth}
+            logoutHandler={logoutHandler}
+            backdropClickHandler = {backdropClickHandler}
+          />,
           errorElement: <ErrorHandler error={state.error} onHandle={errorHandler} />,
           children: [
             {

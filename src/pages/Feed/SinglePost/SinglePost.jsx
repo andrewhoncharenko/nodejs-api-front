@@ -18,7 +18,12 @@ const SinglePost = (props) => {
 useEffect(() => {
     const postId = params.postId;
     
-    fetch('http://localhost:8080/feed/post/' + postId)
+    fetch('http://localhost:8080/feed/post/' + postId, {
+        headers: {
+          Authorization: "Bearer " + props.token
+        }
+      }
+    )
       .then(res => {
         if (res.status !== 200) {
           throw new Error('Failed to fetch status');

@@ -14,7 +14,7 @@ const navigationItems = props => [
       key={item.id}
       className={['navigation-item', props.mobile ? 'mobile' : ''].join(' ')}
     >
-      <NavLink to={item.link} exact onClick={props.onChoose}>
+      <NavLink to={item.link} onClick={props.onChoose}>
         {item.text}
       </NavLink>
     </li>

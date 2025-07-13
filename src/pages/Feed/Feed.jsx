@@ -22,26 +22,29 @@ const Feed = props => {
   });
 
  useEffect(() => {
-    fetch('http://localhost:8080/user/status')
-      .then(res => {
+    fetch('http://localhost:8080/auth/status', {
+      headers: {
+        Authorization: "Bearer " + props.token
+      }
+    })
+    .then(res => {
         if (res.status !== 200) {
           throw new Error('Failed to fetch user status.');
         }
         return res.json();
       })
-      .then(resData => {
+    .then(resData => {
         setState(prevState => {
           return { ...prevState, status: resData.status };
         });
       })
-      .catch(catchError);
-
+    .catch(catchError);
     loadPosts();
   }, []
 );
 
 const loadPosts = direction => {
-    if (direction) {
+    if(direction) {
       setState(prevState => {
         return { ...prevState, postsLoading: true, posts: [] };
       });
@@ -50,7 +53,7 @@ const loadPosts = direction => {
     if (direction === 'next') {
       page++;
       setState(prevState => {
-        return{ ...prevState, postPage: page };
+        return { ...prevState, postPage: page };
       });
     }
     if (direction === 'previous') {
@@ -59,7 +62,11 @@ const loadPosts = direction => {
         return { ...prevState, postPage: page };
       });
     }
-    fetch('http://localhost:8080/feed/posts')
+    fetch('http://localhost:8080/feed/posts?page=' + page, {
+      headers: {
+        Authorization: "Bearer " + props.token
+      }
+    })
       .then(res => {
         if (res.status !== 200) {
           throw new Error('Failed to fetch posts.');
@@ -70,7 +77,12 @@ const loadPosts = direction => {
         setState(prevState => {
           return {
             ...prevState,
-            posts: resData.posts,
+            posts: resData.posts.map(post => {
+              return {
+                ...post,
+                imagePath: post.imageUrl
+              };
+            }),
             totalPosts: resData.totalItems,
             postsLoading: false
           };
@@ -81,7 +93,16 @@ const loadPosts = direction => {
 
 const statusUpdateHandler = event => {
     event.preventDefault();
-    fetch('URL')
+    fetch('http://localhost:8080/auth/status', {
+      method: "PATCH",
+      headers: {
+        Authorization: "Bearer " + props.token,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        status: state.status
+      })
+    })
       .then(res => {
         if (res.status !== 200 && res.status !== 201) {
           throw new Error("Can't update status!");
@@ -131,11 +152,15 @@ const finishEditHandler = postData => {
     formData.append("image", postData.image);
     formData.append("content", postData.content);
     if (state.editPost) {
-      url = 'URL';
+      url = 'http://localhost:8080/feed/post/' + state.editPost._id;
+      method = "PUT";
     }
 
     fetch(url, {
       method: method,
+      headers: {
+        Authorization: "Bearer " + props.token
+      },
       body: formData
     })
       .then(res => {
@@ -195,7 +220,13 @@ const deletePostHandler = postId => {
     setState(prevState => {
       return {...prevState, postsLoading: true };
     });
-    fetch('URL')
+    fetch('http://localhost:8080/feed/post/' + postId, {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer " + props.token
+        }
+      }
+    )
       .then(res => {
         if (res.status !== 200 && res.status !== 201) {
           throw new Error('Deleting a post failed!');
@@ -219,16 +250,15 @@ const deletePostHandler = postId => {
 
 const errorHandler = () => {
     setState(prevState => {
-      return { error: null };
+      return {...prevState, error: null};
     });
   };
 
 const catchError = error => {
     setState(prevState => {
-      return {...prevState, error: error };
+      return {...prevState, error: error};
     });
-  };
-
+};
     return (
       <>
         <ErrorHandler error={state.error} onHandle={errorHandler} />
@@ -267,7 +297,7 @@ const catchError = error => {
           {state.posts.length <= 0 && !state.postsLoading ? (
             <p style={{ textAlign: 'center' }}>No posts found.</p>
           ) : null}
-          {!state.postsLoading && (
+          {!state.postsLoading && (  
             <Paginator
               onPrevious={() => loadPosts('previous')}
               onNext={() => loadPosts('next')}
