@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import openSocket from "socket.io-client";
 
 import Post from '../../components/Feed/Post/Post';
 import Button from '../../components/Button/Button';
@@ -20,7 +21,6 @@ const Feed = props => {
     postsLoading: true,
     editLoading: false
   });
-
  useEffect(() => {
     fetch('http://localhost:8080/auth/status', {
       headers: {
@@ -40,9 +40,44 @@ const Feed = props => {
       })
     .catch(catchError);
     loadPosts();
+    
+    const socket = openSocket("http://localhost:8080");
+    socket.on("posts", data => {
+      if(data.action === "create") {
+        addPost(data.post);
+      }
+      else if(data.action === "update") {
+        updatePost(data.post);
+      }
+      else if(data.action === "delete") {
+        loadPosts();
+      }
+    });
   }, []
 );
 
+const addPost = post => {
+  setState(prevState => {
+    const updatedPosts = [...prevState.posts];
+    if(prevState.postPage === 1) {
+      if(prevState.posts.length >= 2) {
+        updatedPosts.pop();
+      }
+      updatedPosts.unshift(post);
+    }
+    return {...prevState, posts: updatedPosts, totalPosts: prevState.totalPosts + 1};
+  });
+};
+const updatePost = post => {
+  setState(prevState => {
+    const updatedPosts = [...prevState.posts];
+    const updatedPostIndex = updatedPosts.findIndex(p => p._id === post._id);
+    if(updatedPostIndex > -1) {
+      updatedPosts[updatedPostIndex] = post;
+    }
+    return {...prevState, posts: updatedPosts};
+  });
+};
 const loadPosts = direction => {
     if(direction) {
       setState(prevState => {
@@ -169,27 +204,10 @@ const finishEditHandler = postData => {
         }
         return res.json();
       })
-      .then(resData => {
-        const post = {
-          _id: resData.post._id,
-          title: resData.post.title,
-          content: resData.post.content,
-          creator: resData.post.creator,
-          createdAt: resData.post.createdAt
-        };
+      .then(() => {
         setState(prevState => {
-          let updatedPosts = [...prevState.posts];
-          if (prevState.editPost) {
-            const postIndex = prevState.posts.findIndex(
-              p => p._id === prevState.editPost._id
-            );
-            updatedPosts[postIndex] = post;
-          } else if (prevState.posts.length < 2) {
-            updatedPosts = prevState.posts.concat(post);
-          }
           return {
             ...prevState,
-            posts: updatedPosts,
             isEditing: false,
             editPost: null,
             editLoading: false
@@ -233,12 +251,8 @@ const deletePostHandler = postId => {
         }
         return res.json();
       })
-      .then(resData => {
-        console.log(resData);
-        setState(prevState => {
-          const updatedPosts = prevState.posts.filter(p => p._id !== postId);
-          return {...prevState, posts: updatedPosts, postsLoading: false };
-        });
+      .then(() => {
+        loadPosts();
       })
       .catch(err => {
         console.log(err);

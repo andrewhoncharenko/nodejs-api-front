@@ -36,7 +36,8 @@ function App(props) {
       new Date(expiryDate).getTime() - new Date().getTime();
     setState({ isAuth: true, token: token, userId: userId });
     setAutoLogout(remainingMilliseconds);
-  }, [])
+    
+  }, []);
 
   const mobileNavHandler = isOpen => {
     setState(prevState => {
